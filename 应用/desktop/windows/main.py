@@ -15,6 +15,7 @@ from design import STYLE, ACCENT, FEATURES, Symbol, label
 from feedback import FeedbackDialog, FailureFeedbackDialog
 from dialogs import OperationConfirmation
 from views import Views
+import i18n
 
 DRIVER_HELP = '''首次连接时，应用会通过一次管理员授权启动专用驱动助手：
 
@@ -701,7 +702,10 @@ def main():
     if args.offline_self_test and args.report is None:
         parser.error('--offline-self-test requires --report')
     app = QApplication(sys.argv[:1]); app.setStyle('Fusion')
-    font=QFont('Microsoft YaHei UI' if sys.platform=='win32' else 'PingFang SC');font.setPixelSize(12);app.setFont(font);app.setStyleSheet(STYLE)
+    language = i18n.install(app, i18n.resolve(QSettings(*i18n.SETTINGS), force_default=args.offline_self_test))
+    font=QFont('Microsoft YaHei UI' if sys.platform=='win32' else 'PingFang SC');font.setPixelSize(12)
+    if language=='en' and sys.platform=='win32':font.setFamilies(['Segoe UI','Microsoft YaHei UI'])
+    app.setFont(font);app.setStyleSheet(STYLE)
     smoke_dir = TemporaryDirectory(prefix='powerful-win-smoke-') if args.offline_self_test else None
     try:
         window = Window(

@@ -88,14 +88,14 @@ FEATURES={
 }
 
 def label(text, role='body', wrap=True):
-    w=QLabel(str(text)); w.setObjectName(role); w.setWordWrap(wrap)
+    w=QLabel(); w.setObjectName(role); w.setText(str(text)); w.setWordWrap(wrap)
     w.setTextFormat(Qt.TextFormat.PlainText)
     w.setSizePolicy(QSizePolicy.Policy.Preferred,QSizePolicy.Policy.Minimum)
     return w
 
 
 def button(layout,text,callback,role='secondary',enabled=True):
-    w=QPushButton(text); w.setObjectName(role); w.setEnabled(enabled)
+    w=QPushButton(); w.setObjectName(role); w.setText(text); w.setEnabled(enabled)
     w.setCursor(Qt.CursorShape.PointingHandCursor)
     w.clicked.connect(lambda _=False: callback()); layout.addWidget(w)
     if role in ('link','quiet') and isinstance(layout,QVBoxLayout):

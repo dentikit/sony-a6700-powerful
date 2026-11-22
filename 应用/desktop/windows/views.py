@@ -2,17 +2,18 @@
 from pathlib import Path
 import time
 import sys
-from PySide6.QtCore import Qt, QSize, QTimer
+from PySide6.QtCore import Qt, QSettings, QSize, QTimer
 from PySide6.QtGui import QPixmap, QIcon, QDesktopServices
 from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import (QWidget, QFrame, QVBoxLayout, QHBoxLayout, QGridLayout,
-    QScrollArea, QComboBox, QMenu, QDialog, QPlainTextEdit, QSizePolicy, QPushButton)
+    QScrollArea, QComboBox, QMenu, QDialog, QPlainTextEdit, QSizePolicy, QPushButton, QMessageBox)
 from a6700_unlock import __version__
 from a6700_unlock.notice import operation_notice
 from importlib.resources import files
 from design import (label,button,panel,line,row,column,pill,Segments,Symbol,CheckBox,
                     ACCENT,INK,MUTED,AMBER,FEATURES,ActivityIndicator,symbol_icon)
 from market_views import ShutterSoundMarketWidget
+import i18n
 
 
 def title(layout,text,subtitle=''):
@@ -57,7 +58,7 @@ class Views:
         self.feedback_button=button(h,'意见反馈',self.show_feedback,'link');self.feedback_button.setAccessibleName('意见反馈');self.feedback_button.setToolTip('填写问题和图片，按需采集并上传相机日志');self.feedback_button.setIcon(symbol_icon('bubble',14,ACCENT));self.feedback_button.setIconSize(QSize(14,14))
         self.mode_symbol=Symbol('cable',15);h.addWidget(self.mode_symbol)
         self.mode_status=label('相机模式','accent',False);self.mode_status.setStyleSheet('font-size:11px; font-weight:600;');h.addWidget(self.mode_status)
-        self.mode_segments=Segments([(1,'演示'),(0,'相机')],self.mode.currentIndex(),self.mode.setCurrentIndex);self.mode_segments.setFixedWidth(122);h.addWidget(self.mode_segments)
+        self.mode_segments=Segments([(1,'演示'),(0,'相机')],self.mode.currentIndex(),self.mode.setCurrentIndex);self.mode_segments.setFixedWidth(122 if i18n.language()=='zh' else 150);h.addWidget(self.mode_segments)
         help_button=button(h,'',self.help_menu,'iconButton');help_button.setFixedSize(28,28);help_button.setAccessibleName('帮助与版本')
         self.update_dot=QWidget(help_button);self.update_dot.setFixedSize(8,8)
         self.update_dot.setStyleSheet('background:#e5484d;border-radius:4px;')
@@ -101,7 +102,7 @@ class Views:
     def clear(box):
         while box.count():
             item=box.takeAt(0)
-            if item.widget():item.widget().deleteLater()
+            if item.widget():item.widget().hide();item.widget().deleteLater()
             elif item.layout():Views.clear(item.layout())
 
     def page(self,text,subtitle=''):
@@ -169,8 +170,17 @@ class Views:
             m.addAction('统计与诊断…', self.show_usage_settings)
             m.addSeparator()
         m.addAction('查看操作前须知',self.review_notice);m.addAction('Windows 驱动准备',self.driver_help)
-        m.addAction('开源许可',self.show_license);m.addSeparator();a=m.addAction('Windows 预览 · '+__version__);a.setEnabled(False)
+        m.addAction('开源许可',self.show_license)
+        languages=m.addMenu('Language / 语言')
+        for code,name in (('zh','中文'),('en','English')):
+            choice=languages.addAction(name,lambda c=code:self.choose_language(c));choice.setCheckable(True);choice.setChecked(i18n.language()==code)
+        m.addSeparator();a=m.addAction('Windows 预览 · '+__version__);a.setEnabled(False)
         m.exec(self.help_button.mapToGlobal(self.help_button.rect().bottomRight()))
+
+    def choose_language(self,code):
+        """Save the interface language; it applies on the next start, never mid-operation."""
+        QSettings(*i18n.SETTINGS).setValue('language',code)
+        QMessageBox.information(self,'Language / 语言','Restart Powerful6700 to apply the language change.\n重启 Powerful6700 后切换语言。')
 
     def show_usage_settings(self):
         dialog = QDialog(self)
